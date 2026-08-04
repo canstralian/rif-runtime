@@ -13,6 +13,7 @@ from rif_runtime.mcp.metasploit import (
 )
 
 from .auth import ControlPlaneAuth
+from .governance.drift import recommend_correction
 from .replay import ReplayEngine
 from .runtime import RIFRuntime
 from .schemas import PolicyDecision, PolicyRequest, Posture
@@ -171,6 +172,21 @@ def recovered_state() -> dict[str, Any]:
     # Rebuilt from the persisted decision log, not from live runtime state, so
     # the response is meaningful after a restart.
     return asdict(ReplayEngine().recover())
+
+
+@app.get("/v1/drift/recommend")
+def drift_recommend() -> dict[str, Any]:
+    vector = runtime.drift_vector()
+    correction = recommend_correction(vector)
+    return {
+        "drift_vector": {
+            "denial_rate": vector.denial_rate,
+            "adversarial_score": vector.adversarial_score,
+            "action_entropy": vector.action_entropy,
+            "target_entropy": vector.target_entropy,
+        },
+        "recommended_correction": correction.value,
+    }
 
 
 @app.get("/v1/policies")
