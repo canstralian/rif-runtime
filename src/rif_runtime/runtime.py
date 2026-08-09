@@ -67,16 +67,17 @@ class RIFRuntime:
         `PolicyEngine.evaluate()` itself but should still drive posture
         escalation and land in the audit trail.
         """
-        self.governance_graph.record_decision(decision)
-        old_posture = self.posture
-        self.posture = self.reflexive.observe(decision, self.posture)
+        with self._lock:
+            self.governance_graph.record_decision(decision)
+            old_posture = self.posture
+            self.posture = self.reflexive.observe(decision, self.posture)
 
-        self.decisions_store.append(decision.model_dump())
+            self.decisions_store.append(decision.model_dump())
 
-        if old_posture != self.posture:
-            self.posture_store.append(
-                {"old_posture": str(old_posture), "new_posture": str(self.posture)}
-            )
+            if old_posture != self.posture:
+                self.posture_store.append(
+                    {"old_posture": str(old_posture), "new_posture": str(self.posture)}
+                )
         return decision
 
     def evaluate_metasploit(

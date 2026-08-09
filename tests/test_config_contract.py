@@ -16,6 +16,7 @@ from collections.abc import Generator
 from pathlib import Path
 
 import pytest
+
 from rif_runtime.config import (
     ConfigError,
     RifSettings,
@@ -55,10 +56,10 @@ class TestLoadFromToml:
         """Custom values in TOML are correctly loaded."""
         toml_file = tmp_path / "rif.toml"
         toml_file.write_text(
-            '[runtime]\n'
+            "[runtime]\n"
             'posture = "elevated"\n'
             'environment = "staging"\n'
-            'cloud_egress = true\n'
+            "cloud_egress = true\n"
             "\n"
             "[server]\n"
             'host = "127.0.0.1"\n'

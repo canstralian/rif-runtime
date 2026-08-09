@@ -75,7 +75,9 @@ class ServerSection(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    host: str = "0.0.0.0"
+    # Intentional default for container/server deployments; override via
+    # RIF_SERVER_HOST for loopback-only local runs.
+    host: str = "0.0.0.0"  # nosec B104
     port: int = 8000
     root_path: str = ""
 

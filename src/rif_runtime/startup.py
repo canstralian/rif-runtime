@@ -27,7 +27,7 @@ def register_config_startup(app: FastAPI) -> None:
             raise SystemExit(1) from exc
 
         # Store on app.state so route handlers can access if needed
-        app.state.settings = settings  # type: ignore[attr-defined]
+        app.state.settings = settings
 
         logger.info(
             "RIF runtime configuration loaded: %s",
