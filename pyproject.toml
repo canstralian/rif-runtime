@@ -49,6 +49,26 @@ supabase = [
 dev = [
     "pytest>=8.4",
     "mypy>=1.18",
+    # lint.yml installs only `-e ".[dev]"` and then runs `ruff check`, so ruff
+    # has to be declared here. ci.yml gets it from requirements-dev.txt and
+    # quality.yml pins it inline, which is why the omission only broke the
+    # newest workflow.
+    #
+    # Range covers both versions already in use — 0.12.x (requirements-dev.txt)
+    # and 0.15.22 (quality.yml) — so neither workflow hits a resolver conflict.
+    # <0.16 is deliberate: quality.yml records that 0.16.0 re-sorts imports and
+    # enables new lints, reddening main with no code change.
+    "ruff>=0.12,<0.16",
+    # Also required by lint.yml, which installs nothing but this extra:
+    #   bandit  — the `bandit ... || true` step tolerates a failure, but the
+    #             following `cat bandit-report.json` does not, so a missing
+    #             bandit fails the job on the *next* line.
+    #   pytest-cov — the test-quality job runs `pytest --cov` and `coverage
+    #             json` against an 80% floor; neither is guarded.
+    # pip-audit is deliberately absent: its step is `|| true`, so a missing
+    # binary is harmless there.
+    "bandit[toml]>=1.7,<2.0",
+    "pytest-cov>=5.0,<8.0",
     # Required by tests/test_rif_familiar_contracts.py. Without these the
     # quality.yml `pip install -e ".[dev]"` path collects an ImportError even
     # though ci.yml (which installs requirements-dev.txt) passes.

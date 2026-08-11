@@ -75,7 +75,12 @@ class ServerSection(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    host: str = "0.0.0.0"  # nosec B104 — intentional bind-all default, overridable via RIF_SERVER_HOST
+    # Binding all interfaces is the useful default for the containerised
+    # deployment this config contract targets; operators narrow it with
+    # [server] host in rif.toml or RIF_SERVER_HOST.  This is the single source
+    # of truth for the bind address — `rif serve` reads it rather than carrying
+    # its own default (see cli.py).
+    host: str = "0.0.0.0"  # nosec B104
     port: int = 8000
     root_path: str = ""
 
