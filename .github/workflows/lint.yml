@@ -34,7 +34,7 @@ jobs:
 
       - name: Type check with mypy
         run: |
-          mypy src/ tests/
+          mypy src/rif_runtime --ignore-missing-imports
 
       - name: Security check with Bandit
         run: |

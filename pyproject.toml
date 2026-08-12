@@ -48,7 +48,9 @@ supabase = [
 ]
 dev = [
     "pytest>=8.4",
+    "pytest-cov>=6.2,<8.0",
     "mypy>=1.18",
+    "ruff>=0.12",
     # Required by tests/test_rif_familiar_contracts.py. Without these the
     # quality.yml `pip install -e ".[dev]"` path collects an ImportError even
     # though ci.yml (which installs requirements-dev.txt) passes.
