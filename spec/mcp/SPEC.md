@@ -3,6 +3,12 @@
 Status: **Drafted** · Domain: `spec/mcp/` · Conforms to: ADR-0008, `spec/governance/`, `spec/capability/`, `spec/evidence/`
 Reference implementation: `src/rif_runtime/mcp/metasploit.py` (single-server governor this framework generalizes)
 
+> **Read §14 first.** This spec is drafted, not implemented. Sections below
+> describe the reference implementation in the present tense in places where the
+> runtime does not yet conform — most importantly the `destructive` capability
+> class (§5), which the shipped classifier cannot return. §14 records the exact
+> delta, including the deny-reason namespace mapping needed to query real evidence.
+
 ---
 
 ## 1. Purpose and non-goals
@@ -277,3 +283,68 @@ on any single deduction.
 - **OD-5 (carried).** Providers layer (§8) overlaps DIE subsystems 0.1–0.2.
   Ruling applied: reference DIE as normative, keep §8 distinct but non-
   duplicating. Revisit only on genuine divergence.
+
+## 14. Conformance status of the reference implementation
+
+This spec is **drafted**, not implemented. Several sections above are written in
+the present tense about `src/rif_runtime/mcp/metasploit.py` ("mirrors
+`MetasploitGovernor.evaluate()`", "reuses the existing `capabilities.classify`
+machinery"); those describe the intended relationship, not current conformance.
+The table below records the actual delta so no reader mistakes intent for
+shipped behaviour. Requirements above are unchanged — this section only reports
+where the runtime stands.
+
+| Requirement | Status in `metasploit.py` / `policy.py` |
+| --- | --- |
+| §4.1 posture gate | **Implemented** — `metasploit.py`, first check, reason `posture.locked`. |
+| §4.2 egress gate | **Implemented elsewhere** — in `PolicyEngine.evaluate()` (`policy.py`, reason `mcp.egress.disabled`), *not* in the governor. The two run on different call paths, so §4's single ordered sequence does not exist in one place today. |
+| §4.3 injection quarantine | **Partial** — `scan_for_injection` covers `intent.text`, `intent.untrusted_context`, and recursed `params`. It does **not** scan tool descriptions, server metadata, or returned tool results. |
+| §4.4 read-only fast-path | **Implemented** — third check, not fourth (no egress lane precedes it in the governor). |
+| §4.5 consequential authority | **Divergent shape** — realised as three `GovernanceMode` lanes (`read_only_firewall`, `shadow`, `lab_broker`) that this spec does not model. |
+| §5 `destructive` class | **Not implemented.** `CapabilityClass` has exactly three members: `read_only`, `consequential`, `unknown`. `classify()` can never return `destructive`; severity is the orthogonal `is_severe()` predicate over `SEVERE_CAPABILITIES`. The §4.7 / §6 hard gate therefore has no class to key off. **Open decision — see OD-6.** |
+| §5 `unknown` class | **Implemented but unmodelled** — `classify()` returns `unknown` for unrecognised tools, which the broker treats as consequential (satisfying C7's deny-by-default intent). This spec's three-class model has no slot for it. |
+| §6.1 approval present | **Implemented** — `msf.broker.approval_absent`. |
+| §6.2 signature valid | **Implemented** — HMAC via `hmac.compare_digest`. |
+| §6.3 within TTL | **Implemented**, but the default is **600 s**, not the 300 s stated in §6 — see `mint_token(ttl_seconds=600)` and `api.py`'s `payload.get("ttl_seconds", 600)`. |
+| §6.4 single-use | **Not implemented** — no spent-token store; see OD-3. |
+| §6.5 capability pinned | **Implemented** — `msf.broker.capability_mismatch`. |
+| §6.6 target pinned | **Implemented** — `msf.broker.target_pinned`. |
+| §6.7 arg-hash re-verified | **Implemented** — `token.intent_hash != intent.intent_hash()`. The hash correctly covers only `tool`, `capability`, `target`, `scope_id`, `params`, excluding the T4 free-text fields as required. |
+| §7 signed evidence | **Implemented** — `_sign_evidence` / `verify_evidence`. Not yet validated against `spec/evidence/observation_event.schema.json`. |
+| §8 providers registry | **Not implemented** — no server registration or manifest admission exists. |
+| C4 no `auto_approve` | **Holds** — no such key exists anywhere in the runtime. |
+
+### Deny-reason namespace
+
+This spec uses an `mcp.*` namespace; the implementation emits `msf.*`. Only
+`posture.locked` and `mcp.egress.disabled` match verbatim. These strings are
+persisted into `EvidenceEvent.matched_rule` and are the audit trail's primary
+index, so the mapping is load-bearing for replay:
+
+| This spec | Implementation |
+| --- | --- |
+| `mcp.injection.quarantined` | `msf.injection.quarantined` |
+| `mcp.capability.read_only` | `msf.capability.read_only` |
+| `mcp.authority.absent` | `msf.capability.execution_absent`, `msf.broker.approval_absent` |
+| `mcp.gate.signature_invalid` | `msf.broker.signature_invalid` |
+| `mcp.gate.token_expired` | `msf.broker.token_expired` |
+| `mcp.gate.capability_mismatch` | `msf.broker.capability_mismatch` |
+| `mcp.gate.target_pinned` | `msf.broker.target_pinned` |
+| `mcp.gate.intent_mismatch` | `msf.broker.intent_mismatch` |
+| `mcp.gate.authorized` | `msf.broker.authorized` |
+| `mcp.gate.token_replayed` | *(none — §6.4 unimplemented)* |
+
+Renaming the emitted identifiers is a breaking change to historical evidence;
+whether the framework adopts `mcp.*` or retains `msf.*` as the reference lane's
+namespace is **OD-7**.
+
+### Additional open decisions
+
+- **OD-6.** Does `destructive` become a fourth `CapabilityClass` member (with
+  `SEVERE_CAPABILITIES` promoted into it), or is it defined as
+  `consequential ∧ is_severe()`? §4.7 and §11's GREENLIGHT criteria are
+  unreachable as literally written until this is settled.
+- **OD-7.** Deny-reason namespace: rename to `mcp.*` (breaks replay queries over
+  existing evidence) or keep `msf.*` per-lane under a framework scheme.
+- **OD-8.** TTL default: tighten the code to the spec's 300 s, or record 600 s
+  as the intended default.
