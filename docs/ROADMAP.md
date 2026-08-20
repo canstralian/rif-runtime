@@ -10,12 +10,20 @@ RIF is not an autonomous agent framework; it is a governance and execution subst
 
 | Area | Status |
 | --- | --- |
+| Security hardening (Critical/High) | **Next** — see [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) Phase 0 |
+| Tooling / CI / governance | Planned — Phase 2 |
 | Policy Engine | In Progress |
 | Explainability | In Progress |
 | Evidence Layer | Planned |
 | Reflexive Healing | Planned |
 | Controlled Evolution | Planned |
 | HF Space | Planned |
+
+## Execution plan
+
+The prioritized, acceptance-tested sequence (security → tooling → architecture) lives in
+**[IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)**. That document is the working backlog;
+milestones below remain the product north star and map to Phase 3 (A–G) there.
 
 ## Current foundation
 
@@ -24,11 +32,14 @@ RIF is not an autonomous agent framework; it is a governance and execution subst
 - MCP interception boundary;
 - policy, posture, graph, telemetry, and audit surfaces;
 - explainability regression tests;
-- CI, release, secret scanning, dependency review, code-quality, and security-scanning workflows.
+- CI, release, secret scanning, dependency review, code-quality, and security-scanning workflows;
+- development environment + agent instructions (see PR #37 / `AGENTS.md` when merged).
 
 ## Milestone 1 — Deterministic governance core
 
 **Goal:** make every runtime decision reconstructable.
+
+**Depends on:** Implementation Plan Phase 0 H2 (true deny-by-default) and Phase 2 CI.
 
 - Stabilize the causal-path/explainability contract.
 - Define policy precedence and frozen environment snapshots.

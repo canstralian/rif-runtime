@@ -19,6 +19,7 @@ RIF Runtime is a governed execution substrate for agents and tools. It compiles 
 **Non-goal:** RIF is not an autonomous agent framework. RIF is a governance and execution substrate for agents.
 
 - [Roadmap](docs/ROADMAP.md)
+- [Implementation Plan](docs/IMPLEMENTATION_PLAN.md) (security → tooling → architecture)
 - [Reflexive Evolution Pipeline](docs/REFLEXIVE_EVOLUTION.md)
 
 ## Run
