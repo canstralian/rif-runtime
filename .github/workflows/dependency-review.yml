@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       # Dependency review uses the dependency-graph *compare* API, which on
       # private repos requires GitHub Advanced Security (the SBOM endpoint
