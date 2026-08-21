@@ -27,7 +27,7 @@ jobs:
     name: environment.json must use harden script
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Forbid bare python3 -m venv as Cloud install
         run: |
