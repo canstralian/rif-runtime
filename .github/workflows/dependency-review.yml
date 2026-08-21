@@ -34,7 +34,7 @@ jobs:
             echo "::notice::Dependency review is not available on this repository (requires Dependency graph + GitHub Advanced Security); skipping. Enable it under Settings -> Advanced Security to activate this check."
           fi
 
-      - uses: actions/dependency-review-action@v4
+      - uses: actions/dependency-review-action@v5
         if: steps.dep-review.outputs.enabled == 'true'
         with:
           fail-on-severity: moderate
