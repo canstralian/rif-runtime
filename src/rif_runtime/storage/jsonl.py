@@ -157,8 +157,22 @@ class HashChainedJsonlStore(JsonlStore):
         if size == 0:
             return GENESIS_HASH
 
-        handle.seek(max(0, size - self._TAIL_WINDOW))
-        lines = [line for line in handle.read().splitlines() if line.strip()]
+        # Grow the window until the final line is read whole. Seeking a fixed
+        # distance from the end starts the read mid-row when the last row is
+        # larger than the window (an unbounded ``target`` makes that reachable),
+        # leaving ``lines[-1]`` a truncated fragment that fails to parse and
+        # forks the chain at genesis. A newline before the final line -- or
+        # reaching the start of file -- proves the last line is not truncated.
+        window = self._TAIL_WINDOW
+        while True:
+            start = max(0, size - window)
+            handle.seek(start)
+            chunk = handle.read()
+            if start == 0 or "\n" in chunk.rstrip("\n"):
+                break
+            window *= 2
+
+        lines = [line for line in chunk.splitlines() if line.strip()]
         if not lines:
             return GENESIS_HASH
 
