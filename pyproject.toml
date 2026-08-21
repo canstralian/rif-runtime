@@ -61,7 +61,7 @@ dev = [
     # `pip-audit` on requirements/dev.txt fails the security job below that.
     "pytest>=9.0.3,<10.0",
     "pytest-cov>=7.1,<8.0",
-    "mypy>=1.18,<2.0",
+    "mypy>=1.18,<3.0",
     # Pinned to a minor series, not floated. Unpinned installs pulled ruff
     # 0.16.x, which re-sorts imports and enables new lints — turning main red
     # with no code change. The lock pins the exact patch.

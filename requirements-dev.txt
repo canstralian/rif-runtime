@@ -16,7 +16,7 @@ pytest>=9.0.3,<10.0
 pytest-cov>=7.1,<8.0
 
 # Static analysis
-mypy>=1.18,<2.0
+mypy>=1.18,<3.0
 # Pinned to a minor series. Unpinned installs pulled ruff 0.16.x, which
 # re-sorts imports and enables new lints, turning main red with no code change.
 ruff>=0.15,<0.16
