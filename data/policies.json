@@ -9,6 +9,14 @@
       "target": "api.anthropic.com"
     },
     {
+      "action": "run.create",
+      "effect": "allow",
+      "id": "allow_run_create",
+      "metadata": {},
+      "reason": "governed run creation via POST /v1/runs",
+      "target": "*"
+    },
+    {
       "action": "*",
       "effect": "deny",
       "id": "deny_unknown_by_default",

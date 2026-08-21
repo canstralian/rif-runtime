@@ -28,6 +28,13 @@ DEFAULT_POLICIES = {
             "reason": "known model API host",
         },
         {
+            "id": "allow_run_create",
+            "effect": "allow",
+            "action": "run.create",
+            "target": "*",
+            "reason": "governed run creation via POST /v1/runs",
+        },
+        {
             "id": "deny_unknown_by_default",
             "effect": "deny",
             "action": "*",
