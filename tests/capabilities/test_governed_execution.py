@@ -58,7 +58,9 @@ def test_runtime_executes_only_after_capability_admission(tmp_path) -> None:
     assert (tmp_path / "capability_evidence.jsonl").exists()
 
 
-def test_runtime_denies_before_capability_execution_when_posture_locked(tmp_path) -> None:
+def test_runtime_denies_before_capability_execution_when_posture_locked(
+    tmp_path,
+) -> None:
     runtime = RIFRuntime(data_dir=tmp_path)
     runtime.register_capability(EchoCapability(), admitted_echo_record())
     runtime.set_posture(Posture.locked)

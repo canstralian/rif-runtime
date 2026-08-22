@@ -11,13 +11,12 @@ import rif_runtime
 
 @pytest.fixture()
 def patch_metadata_unavailable(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Patch importlib.metadata.version to always raise PackageNotFoundError."""
-    from importlib.metadata import PackageNotFoundError as _PNFE
+    """Patch rif_runtime._version.version to always raise PackageNotFoundError."""
 
     def _raise(_name: str) -> str:
-        raise _PNFE(_name)
+        raise PackageNotFoundError(_name)
 
-    monkeypatch.setattr("importlib.metadata.version", _raise)
+    monkeypatch.setattr("rif_runtime._version.version", _raise)
 
 
 def test_version_matches_pyproject() -> None:
