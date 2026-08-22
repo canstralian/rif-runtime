@@ -18,8 +18,21 @@ class PolicyRule(BaseModel):
     metadata: dict[str, str] = Field(default_factory=dict)
 
 
+# Deny-by-default means "deny what is not enumerated" -- so the runtime's own
+# first-party actions have to be enumerated here. `run.create` backs
+# POST /v1/runs, which is separately gated by a Supabase JWT
+# (api._require_identity); without this rule that endpoint returns 403 for
+# every caller. Operators tightening the default policy should replace this
+# rule rather than delete it, or the endpoint stops working.
 DEFAULT_POLICIES = {
     "rules": [
+        {
+            "id": "allow_run_create",
+            "effect": "allow",
+            "action": "run.create",
+            "target": "*",
+            "reason": "first-party governed run creation (POST /v1/runs)",
+        },
         {
             "id": "allow_known_model_hosts",
             "effect": "allow",

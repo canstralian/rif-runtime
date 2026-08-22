@@ -123,9 +123,20 @@ if any are active).
 ### 7. Verify branch protection
 
 Ensure protection remains enabled for `main` (and `release/*` / `hotfix/*` if
-used): required pull requests, required status checks (`ci.yml` and
-`quality.yml` jobs), signed commits if enforced, no force pushes, no branch
-deletion.
+used): required pull requests, required status checks, signed commits if
+enforced, no force pushes, no branch deletion.
+
+**Required status check:** `gate`, from `.github/workflows/merge-gate.yml`.
+That job aggregates lock-sync, `verify` (3.12 and 3.13), clean-clone and
+dependency-security into a single verdict, and is designed to be the only
+required check — see the comments in that workflow.
+
+> **Migration note.** `ci.yml`, `quality.yml` and `lint.yml` were removed; their
+> ruff/mypy/pytest work was already duplicated by `merge-gate.yml`'s `verify`
+> matrix. If branch protection still lists checks from those workflows as
+> required, they will never report again and `main` cannot be merged. Remove
+> them and require `gate` instead. Optionally also require `coverage` and
+> `build and smoke` from the new `Coverage` and `Image` workflows.
 
 ### 8. Update release documentation
 

@@ -21,6 +21,11 @@ class AuditRecord:
     def __post_init__(self) -> None:
         object.__setattr__(self, "current_hash", calculate_hash(self))
 
+    @staticmethod
+    def new_event_id() -> str:
+        """Fresh identifier for a record about to be appended to a chain."""
+        return str(uuid4())
+
 
 def utc_now_iso() -> str:
     return datetime.now(UTC).isoformat()

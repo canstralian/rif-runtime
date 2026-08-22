@@ -93,3 +93,38 @@ def test_version_unknown_when_all_fallbacks_fail(
     assert len(w) == 1
     assert issubclass(w[0].category, RuntimeWarning)
     assert "rif-runtime" in str(w[0].message)
+
+
+def test_api_app_version_matches_the_package() -> None:
+    """The OpenAPI document must not advertise a version the package isn't.
+
+    api.py hardcoded "0.3.0" while the package was 0.3.0rc2, so /openapi.json
+    described a release that had not shipped. Asserted against the resolver
+    rather than a literal, so this stays true through the "unknown" fallback.
+    """
+    from rif_runtime import __version__
+    from rif_runtime.api import app
+
+    assert app.version == __version__
+
+
+def test_openapi_document_reports_the_package_version() -> None:
+    """Check the served document, not just the attribute."""
+    from rif_runtime import __version__
+    from rif_runtime.api import app
+
+    assert app.openapi()["info"]["version"] == __version__
+
+
+def test_no_hardcoded_version_literal_in_api_module() -> None:
+    """A future edit must not reintroduce the literal that drifted."""
+    import re
+    from pathlib import Path
+
+    source = (
+        Path(__file__).resolve().parent.parent / "src" / "rif_runtime" / "api.py"
+    ).read_text(encoding="utf-8")
+
+    assert not re.search(r'version\s*=\s*"\d+\.\d+', source), (
+        "api.py contains a hardcoded version literal; use __version__ instead"
+    )

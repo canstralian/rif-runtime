@@ -54,6 +54,28 @@ python rif-evals/code_refinement_mst/runners/run_session.py \
 
 For harness-only testing, `ScriptedAgent` is used by the repository's tests to exercise deterministic sequences without a live model.
 
+## Required policy
+
+The harness gates every refinement turn through `RIFRuntime.evaluate()` with
+`action="code.refine"`. The default policy denies by default, so the runtime you
+hand the harness must carry a rule permitting that action, or every turn is
+returned as `blocked`:
+
+```json
+{
+  "id": "allow_eval_code_refine",
+  "effect": "allow",
+  "action": "code.refine",
+  "target": "*",
+  "reason": "MST eval harness refinement turns"
+}
+```
+
+A blocked turn records `tests_passed: null`, and `score_session()` treats a null
+as "not a regression". A fully blocked session therefore scores a *perfect* MST
+while verifying nothing. Check `verification_status` in the trace before
+reading any score.
+
 ## Constraint alignment
 
 If constrained decoding is introduced, evaluate the constrainer as part of the experiment rather than assuming that stronger syntactic constraints improve functional correctness.
