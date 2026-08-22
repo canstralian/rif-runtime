@@ -65,7 +65,7 @@ dev = [
     # Pinned to a minor series, not floated. Unpinned installs pulled ruff
     # 0.16.x, which re-sorts imports and enables new lints — turning main red
     # with no code change. The lock pins the exact patch.
-    "ruff>=0.15,<0.16",
+    "ruff>=0.15,<0.17",
     # Required by tests/test_rif_familiar_contracts.py. Without these the
     # `pip install -e ".[dev]"` path collects an ImportError.
     "jsonschema[format]>=4.25,<5.0",

@@ -19,7 +19,7 @@ pytest-cov>=7.1,<8.0
 mypy>=1.18,<2.0
 # Pinned to a minor series. Unpinned installs pulled ruff 0.16.x, which
 # re-sorts imports and enables new lints, turning main red with no code change.
-ruff>=0.15,<0.16
+ruff>=0.15,<0.17
 # PyYAML ships no py.typed; mypy 1.x needs the stub package explicitly.
 types-PyYAML>=6.0,<7.0
 
