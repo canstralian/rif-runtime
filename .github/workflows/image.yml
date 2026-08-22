@@ -1,0 +1,162 @@
+# Container image: build, smoke, and filesystem vulnerability scan.
+#
+# The build is not decorative. The image installs the hash-pinned runtime lock
+# and declares a HEALTHCHECK, and neither is exercised by the Python jobs — a
+# broken Dockerfile is invisible to ruff, mypy and pytest alike. The smoke step
+# therefore starts the container and asks it the one question that matters:
+# does /health answer.
+name: Image
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Only security-scan uploads SARIF, so only it gets security-events: write.
+# At workflow level the build job would hold that scope too -- and that job
+# runs the checked-out code inside a container.
+permissions:
+  contents: read
+
+concurrency:
+  group: image-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: build and smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Do not leave the job's GITHUB_TOKEN in .git/config. This job builds
+          # and then *runs* the checked-out code inside a container; a persisted
+          # credential is reachable from anything that executes here. Nothing
+          # after checkout talks to git.
+          persist-credentials: false
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          # load, not just build: the smoke step needs the image in the local
+          # daemon. A cache-only build would leave nothing to run.
+          load: true
+          tags: rif-runtime:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke test the running container
+        run: |
+          set -euo pipefail
+          # Generated per run, not a literal: a checked-in key -- even a
+          # throwaway one -- is indistinguishable from a real leaked credential
+          # to a secret scanner, and trains reviewers to ignore the finding.
+          key="$(openssl rand -hex 16)"
+          echo "::add-mask::${key}"
+          echo "SMOKE_KEY=${key}" >> "$GITHUB_ENV"
+          docker run -d --name rif-smoke -p 8000:8000 \
+            -e RIF_CONTROL_PLANE_API_KEYS="${key}" \
+            rif-runtime:ci
+          # Poll rather than sleep a fixed interval: the start-up cost of the
+          # image is not a constant worth guessing at.
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8000/health > health.json; then
+              echo "healthy after ${attempt} attempt(s)"
+              cat health.json
+              break
+            fi
+            if [ "$attempt" -eq 30 ]; then
+              echo "::error::container never became healthy"
+              docker logs rif-smoke
+              exit 1
+            fi
+            sleep 2
+          done
+          python -c "import json;d=json.load(open('health.json'));assert d['status']=='ok',d;print('status ok')"
+
+      # /health is a pure read. Every preceding layer runs as root, so a
+      # root-owned /app/data yields a container that reports healthy and then
+      # fails on the first write. This step exercises the write path end to
+      # end: evaluate a policy request, which records a decision and appends to
+      # decisions.jsonl as the unprivileged user.
+      - name: Smoke test the write path
+        run: |
+          set -euo pipefail
+          status=$(curl -sS -o response.json -w '%{http_code}' \
+            -X POST http://127.0.0.1:8000/v1/policy/evaluate \
+            -H 'content-type: application/json' \
+            -H "X-API-Key: ${SMOKE_KEY}" \
+            -d '{"actor":"agent:smoke","action":"http.request","target":"https://api.anthropic.com/v1"}')
+          echo "HTTP ${status}"; cat response.json; echo
+          if [ "$status" != "200" ]; then
+            echo "::error::policy evaluation failed with HTTP ${status}"
+            docker logs rif-smoke
+            exit 1
+          fi
+          python -c "import json;d=json.load(open('response.json'));assert d['decision']=='allow',d"
+
+      - name: Assert the decision reached the on-disk log
+        run: |
+          set -euo pipefail
+          # The write is what matters, not the response: a PermissionError here
+          # would have been swallowed as a 500 above, but an empty log is
+          # unambiguous.
+          lines=$(docker exec rif-smoke sh -c 'wc -l < /app/data/decisions.jsonl')
+          echo "decisions.jsonl lines: ${lines}"
+          [ "${lines:-0}" -ge 1 ] || { echo "::error::decision was not persisted"; exit 1; }
+          docker exec rif-smoke sh -c 'stat -c "%U %n" /app/data /app/data/decisions.jsonl'
+
+      - name: Assert the image declares a healthcheck
+        run: |
+          set -euo pipefail
+          # Guards the HEALTHCHECK added alongside the pinned install: an
+          # orchestrator with no health signal only knows the process is up.
+          test "$(docker inspect --format '{{if .Config.Healthcheck}}yes{{else}}no{{end}}' rif-runtime:ci)" = "yes" \
+            || { echo "::error::image declares no HEALTHCHECK"; exit 1; }
+
+      - name: Container logs
+        if: always()
+        run: docker logs rif-smoke || true
+
+      - name: Stop container
+        if: always()
+        run: docker rm -f rif-smoke || true
+
+  security-scan:
+    name: filesystem scan
+    permissions:
+      contents: read
+      security-events: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Do not leave the job's GITHUB_TOKEN in .git/config. This job builds
+          # and then *runs* the checked-out code inside a container; a persisted
+          # credential is reachable from anything that executes here. Nothing
+          # after checkout talks to git.
+          persist-credentials: false
+
+      - name: Run Trivy
+        # Tags on this action are v-prefixed; "0.28.0" does not exist and the
+        # job failed to resolve the action at all. Pinned to a real release
+        # rather than @master, which lint.yml used -- a mutable ref on a
+        # third-party action in a job holding security-events: write.
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          format: "sarif"
+          output: "trivy-results.sarif"
+
+      - uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: trivy-results.sarif

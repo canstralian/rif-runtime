@@ -1,0 +1,25 @@
+# Findings reviewed and accepted, one fingerprint per line.
+#
+# This file -- not an [allowlist] block in .gitleaks.toml -- is where gitleaks
+# takes fingerprints. `allowlist.fingerprints` is not a field gitleaks parses;
+# an earlier attempt to put it there was accepted without complaint (unknown
+# TOML keys are discarded silently) and suppressed nothing.
+#
+# The four-part form `commit:file:rule-id:start-line` is the narrowest exception
+# gitleaks offers: it exempts exactly one occurrence in one historical commit,
+# not a file, a path glob, or a rule. Matching is exact, so a new occurrence
+# anywhere else still fails the scan.
+#
+# 9fd5da7 added a container smoke test to the Image workflow that passed the
+# literal `smoke-test-key` in a `curl -H 'X-API-Key: ...'` header, which the
+# curl-auth-header rule matches. It was never a credential: the same literal was
+# handed to the throwaway container one line earlier as
+# RIF_CONTROL_PLANE_API_KEYS, so it authenticated a container that exists for
+# ~40 seconds inside the job that created it.
+#
+# It is already gone from the branch tip -- e55d60e replaced it with a value
+# generated per run via `openssl rand` and masked with ::add-mask::, because a
+# checked-in key is indistinguishable from a leaked one to a scanner. This entry
+# exists only because gitleaks scans commit history, where the original commit
+# still contains it.
+9fd5da737106c35537ebde8bb7c21dd9f16bcbca:.github/workflows/image.yml:curl-auth-header:77

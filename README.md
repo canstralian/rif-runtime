@@ -1,7 +1,8 @@
 # RIF Runtime
 
-[![CI](https://github.com/canstralian/rif-runtime/actions/workflows/ci.yml/badge.svg)](https://github.com/canstralian/rif-runtime/actions/workflows/ci.yml)
-[![Quality](https://github.com/canstralian/rif-runtime/actions/workflows/quality.yml/badge.svg)](https://github.com/canstralian/rif-runtime/actions/workflows/quality.yml)
+[![Merge Gate](https://github.com/canstralian/rif-runtime/actions/workflows/merge-gate.yml/badge.svg)](https://github.com/canstralian/rif-runtime/actions/workflows/merge-gate.yml)
+[![Coverage](https://github.com/canstralian/rif-runtime/actions/workflows/coverage.yml/badge.svg)](https://github.com/canstralian/rif-runtime/actions/workflows/coverage.yml)
+[![Image](https://github.com/canstralian/rif-runtime/actions/workflows/image.yml/badge.svg)](https://github.com/canstralian/rif-runtime/actions/workflows/image.yml)
 [![Release](https://github.com/canstralian/rif-runtime/actions/workflows/release.yml/badge.svg)](https://github.com/canstralian/rif-runtime/actions/workflows/release.yml)
 [![CodeQL](https://github.com/canstralian/rif-runtime/actions/workflows/codeql.yml/badge.svg)](https://github.com/canstralian/rif-runtime/actions/workflows/codeql.yml)
 [![Bandit](https://github.com/canstralian/rif-runtime/actions/workflows/bandit.yml/badge.svg)](https://github.com/canstralian/rif-runtime/actions/workflows/bandit.yml)

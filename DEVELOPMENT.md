@@ -35,11 +35,15 @@ Development server:
 rif serve
 ```
 
-The CLI uses Uvicorn with reload enabled. For a single foreground process, use:
+`rif serve` runs a single foreground Uvicorn process. Pass `--reload` while
+working on the runtime to restart it when source files change:
 
 ```bash
-python -m uvicorn rif_runtime.api:app --host 127.0.0.1 --port 8000
+rif serve --reload
 ```
+
+Reload is a development convenience: it starts a file-watching supervisor and
+should not be used for a deployed service.
 
 The service exposes FastAPI documentation at `/docs` and `/redoc`.
 

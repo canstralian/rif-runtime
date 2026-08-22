@@ -1,0 +1,71 @@
+# Coverage reporting and threshold.
+#
+# Deliberately NOT a duplicate of the merge gate: `verify` in merge-gate.yml
+# owns ruff/mypy/pytest on the 3.12+3.13 matrix. This workflow exists only for
+# the one thing that gate does not measure — how much of the runtime the suite
+# actually exercises.
+name: Coverage
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: coverage-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  coverage:
+    name: coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          # Keyed on the compiled lock, not on files holding version ranges.
+          # See requirements/README.md.
+          cache-dependency-path: requirements/dev.txt
+
+      - name: Install from lock
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --require-hashes -r requirements/dev.txt
+          python -m pip install -e . --no-deps
+
+      - name: Run tests with coverage
+        run: pytest --cov=rif_runtime --cov-report=xml --cov-report=term
+
+      - uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage.xml
+          flags: unittests
+          # Codecov outages must not read as a code failure. The threshold
+          # below is the enforcing step.
+          fail_ci_if_error: false
+
+      # Enforced in-repo rather than via Codecov settings, so the number that
+      # blocks a merge lives next to the code it measures.
+      - name: Enforce coverage threshold
+        run: |
+          python - <<'PY'
+          import sys
+          import xml.etree.ElementTree as ET
+
+          MINIMUM = 90.0
+          covered = float(ET.parse("coverage.xml").getroot().get("line-rate")) * 100
+          print(f"line coverage: {covered:.2f}% (minimum {MINIMUM}%)")
+          if covered < MINIMUM:
+              print(f"::error::coverage {covered:.2f}% is below the {MINIMUM}% minimum")
+              sys.exit(1)
+          PY

@@ -19,6 +19,7 @@ import abc
 import argparse
 import importlib
 import json
+import sys
 from pathlib import Path
 
 from sandbox_exec import run_in_sandbox
@@ -160,13 +161,22 @@ def run_session(
     turn_results = [event["tests_passed"] for event in events]
     score = score_session(task_id, turn_results)
 
+    # A blocked turn records tests_passed=None, and score_session treats a null
+    # as "not a regression" -- so a session the policy gated shut scores a
+    # *perfect* MST while verifying nothing. Carry the count next to the score
+    # rather than leaving the caller to notice, and mark the score unusable when
+    # no turn was actually verified.
+    turns_blocked = sum(1 for event in events if event["tests_passed"] is None)
+
     result = {
         "task_id": task_id,
         "model": agent.name,
         "turns_attempted": score.turns_attempted,
         "turns_passed": score.turns_passed,
+        "turns_blocked": turns_blocked,
         "first_regression_turn": score.first_regression_turn,
         "mst_score": score.mst_score,
+        "score_is_meaningful": turns_blocked < score.turns_attempted,
         "events": events,
     }
 
@@ -264,7 +274,19 @@ def main(argv: list[str] | None = None) -> int:
     session_path = write_session(session)
     write_report([session["result"]])
 
-    print(f"mst_score={session['result']['mst_score']} session={session_path}")
+    result = session["result"]
+    print(f"mst_score={result['mst_score']} session={session_path}")
+    if not result["score_is_meaningful"]:
+        # Every turn was gated shut, so nothing was verified and the score
+        # above is an artefact of blocked turns counting as non-regressions.
+        print(
+            f"WARNING: all {result['turns_attempted']} turn(s) were blocked by "
+            "policy; no candidate was verified and mst_score is meaningless. "
+            "The runtime needs a rule allowing action 'code.refine' -- see "
+            "'Required policy' in the eval README.",
+            file=sys.stderr,
+        )
+        return 1
     return 0
 
 

@@ -1,6 +1,14 @@
 {
   "rules": [
     {
+      "action": "run.create",
+      "effect": "allow",
+      "id": "allow_run_create",
+      "metadata": {},
+      "reason": "first-party governed run creation (POST /v1/runs)",
+      "target": "*"
+    },
+    {
       "action": "http.request",
       "effect": "allow",
       "id": "allow_known_model_hosts",

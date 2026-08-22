@@ -32,3 +32,11 @@
 **/values.dev.yaml
 LICENSE
 README.md
+
+# Local runtime state. COPY reads the build context, not git, so a developer's
+# decisions.jsonl / posture_history.jsonl would otherwise be baked into the
+# image even though .gitignore keeps them out of the repository. data/ itself
+# is NOT excluded: policies.json is the seeded default policy and belongs in
+# the image.
+data/*.jsonl
+data/*.tmp
