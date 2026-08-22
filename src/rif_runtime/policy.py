@@ -48,8 +48,6 @@ class PolicyEngine:
         if posture == Posture.locked:
             return self.deny(req, env_name, posture, "runtime locked", "posture.locked")
         for rule in policy_rules:
-            if rule.action == "*" or rule.target == "*":
-                continue
             if rule_matches(rule, req):
                 return PolicyDecision(
                     decision=rule.effect,
@@ -95,15 +93,12 @@ class PolicyEngine:
                     f"host denied: {h}",
                     "network.host.denied",
                 )
-        return PolicyDecision(
-            decision=Decision.allow,
-            actor=req.actor,
-            action=req.action,
-            target=req.target,
-            environment=env_name,
-            posture=posture,
-            reason="allowed by constraints",
-            matched_rule="default.allow",
+        return self.deny(
+            req,
+            env_name,
+            posture,
+            "no matching allow rule",
+            "default.deny",
         )
 
     def deny(
