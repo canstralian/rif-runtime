@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+import tomllib
+import warnings
+from importlib.metadata import PackageNotFoundError, version
+from pathlib import Path
+
 
 def _read_version_from_pyproject() -> str | None:
     # Returns None (not raises) so _read_version() can escalate to RuntimeWarning.
@@ -10,13 +15,10 @@ def _read_version_from_pyproject() -> str | None:
     # the repo root (root/src/rif_runtime/_version.py). Only valid in source/editable
     # checkouts — built wheels go through importlib.metadata instead.
     try:
-        import tomllib
-        from pathlib import Path
-
         _pyproject = Path(__file__).parent.parent.parent / "pyproject.toml"
         with _pyproject.open("rb") as _f:
-            version: str = tomllib.load(_f)["project"]["version"]
-            return version
+            resolved: str = tomllib.load(_f)["project"]["version"]
+            return resolved
     except (FileNotFoundError, KeyError, tomllib.TOMLDecodeError):
         return None
 
@@ -30,8 +32,6 @@ def _read_version() -> str:
     3. RuntimeWarning + "unknown" — last resort when both paths unavailable
     """
     try:
-        from importlib.metadata import PackageNotFoundError, version
-
         return version("rif-runtime")
     except PackageNotFoundError:
         pass
@@ -44,8 +44,6 @@ def _read_version() -> str:
 
     # Neither metadata nor pyproject.toml is reachable — surface this loudly
     # rather than returning a silently-stale constant.
-    import warnings
-
     warnings.warn(
         "rif-runtime: version could not be determined. "
         "Run `pip install -e .` to fix this.",

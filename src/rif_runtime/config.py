@@ -75,7 +75,7 @@ class ServerSection(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    host: str = "0.0.0.0"  # nosec B104 — intentional bind-all default, overridable via RIF_SERVER_HOST
+    host: str = "0.0.0.0"  # nosec B104 — bind-all default; override via RIF_SERVER_HOST
     port: int = 8000
     root_path: str = ""
 
