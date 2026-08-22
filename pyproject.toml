@@ -93,6 +93,10 @@ where = ["src"]
 entrypoint = "src.rif_runtime.api:app"
 
 [tool.pytest.ini_options]
+# Confine root test collection to the rif_runtime suite. The self-contained
+# workflow-automation/ subproject ships its own pyproject + tests and is run from
+# within that directory (see workflow-automation/README.md); keeping it out of the
+# root run means the root CI does not need the `wfa` package installed.
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 addopts = "-ra"

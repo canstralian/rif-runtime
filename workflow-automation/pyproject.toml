@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "workflow-automation"
+version = "0.1.0"
+description = "WFA-001 — event-driven, unattended developer automation engine (fail-closed, provenance-classified)"
+requires-python = ">=3.12"
+dependencies = ["pydantic>=2", "pyyaml", "cryptography"]
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-cov", "ruff==0.15.22", "mypy", "types-PyYAML"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.coverage.run]
+branch = true
+source = ["wfa"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true

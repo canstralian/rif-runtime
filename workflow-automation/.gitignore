@@ -1,0 +1,14 @@
+# Build / packaging artifacts
+*.egg-info/
+build/
+dist/
+__pycache__/
+*.py[cod]
+
+# Test / coverage artifacts
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+.ruff_cache/

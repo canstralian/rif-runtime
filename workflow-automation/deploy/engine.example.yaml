@@ -1,0 +1,29 @@
+# Signed engine.yaml (T2 DEVELOPER authority, spec §1.2). In production this file is
+# signed and its signature verified at startup; a failure sends the engine to Minimal
+# mode (webhook endpoint returns 503, zero workflows registered).
+
+max_chain_depth: 3
+max_steps_per_run: 50
+run_timeout_ms: 900000
+step_timeout_ms: 120000
+max_concurrent_runs: 20
+max_concurrent_runs_per_repo: 3
+max_payload_bytes: 5242880
+queue_depth_ceiling: 10000
+replay_window_s: 86400
+timestamp_skew_s: 300
+approval_ttl_s: 600
+
+# Egress is deny-by-default: only these hosts are reachable (spec §9). RFC1918,
+# loopback, and link-local are always blocked regardless of this list.
+egress_allow_list:
+  - api.github.com
+  - slack.com
+  - your-org.atlassian.net
+
+# Permissions an UNTRUSTED run may hold — read-only APIs only (spec §2.1).
+untrusted_read_permissions:
+  - contents:read
+
+# The engine's own actor identity, for the self-actor loop filter (spec §4.7).
+engine_actor: "wfa-engine[bot]"

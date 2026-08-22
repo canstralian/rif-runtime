@@ -1,0 +1,34 @@
+version: "1"
+id: pr-summary
+on:
+  pull_request: [opened, synchronize]
+# Runs under the weakest profile that suffices. Summarising a fork PR is fine under
+# UNTRUSTED; the escalated comment step below is what needs a stronger profile.
+profile_required: UNTRUSTED
+permissions:
+  - contents:read
+  - issues:write
+credentials:
+  - github_token
+concurrency:
+  group: "pr-summary-${event.repo}-${event.pr.number}"
+  cancel_in_progress: true
+steps:
+  - id: summarise
+    uses: llm.summarise
+    taint: SOURCE
+    permission: contents:read
+    output_schema: summary.schema.json
+    with:
+      content: "${event.pr.diff}"
+
+  - id: comment
+    uses: github.create_comment
+    taint: SINK
+    permission: issues:write
+    escalates: false
+    output_schema: comment.schema.json
+    with:
+      repo: "${event.repo}"
+      issue_number: "${event.pr.number}"
+      body: "${steps.summarise.output.summary}"

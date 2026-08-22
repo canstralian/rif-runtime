@@ -1,0 +1,57 @@
+# Deployment topology (spec §9). Ingress and workers are separate replica sets:
+# ingress is internet-facing and credential-free; workers hold credentials and are
+# not internet-reachable. Broker and credential store are managed dependencies with
+# their own network policy. Compromise of the public surface does not yield secrets.
+
+services:
+  ingress:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    command: ["ingress"]
+    read_only: true
+    user: "65532:65532"
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    tmpfs: ["/tmp"]
+    ports: ["8080:8080"]
+    networks: ["public", "internal"]
+    depends_on: ["broker"]
+
+  worker:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    command: ["worker"]
+    read_only: true
+    user: "65532:65532"
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    tmpfs: ["/tmp"]
+    # No public network: workers are not internet-reachable.
+    networks: ["internal"]
+    depends_on: ["broker", "credstore"]
+    deploy:
+      replicas: 3
+
+  broker:
+    image: postgres:16-alpine
+    # OD-1: Postgres gives transactional enqueue with the run record + trivial
+    # fencing tokens.
+    environment:
+      POSTGRES_PASSWORD_FILE: /run/secrets/broker_pw
+    networks: ["internal"]
+    secrets: ["broker_pw"]
+
+  credstore:
+    image: hashicorp/vault:1.16
+    networks: ["internal"]
+
+networks:
+  public:
+  internal:
+    internal: true
+
+secrets:
+  broker_pw:
+    file: ./secrets/broker_pw.txt
