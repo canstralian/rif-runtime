@@ -19,6 +19,7 @@ import abc
 import argparse
 import importlib
 import json
+import sys
 from pathlib import Path
 
 from sandbox_exec import run_in_sandbox
@@ -160,13 +161,22 @@ def run_session(
     turn_results = [event["tests_passed"] for event in events]
     score = score_session(task_id, turn_results)
 
+    # A blocked turn records tests_passed=None, and score_session treats a null
+    # as "not a regression" -- so a session the policy gated shut scores a
+    # *perfect* MST while verifying nothing. Carry the count next to the score
+    # rather than leaving the caller to notice, and mark the score unusable when
+    # no turn was actually verified.
+    turns_blocked = sum(1 for event in events if event["tests_passed"] is None)
+
     result = {
         "task_id": task_id,
         "model": agent.name,
         "turns_attempted": score.turns_attempted,
         "turns_passed": score.turns_passed,
+        "turns_blocked": turns_blocked,
         "first_regression_turn": score.first_regression_turn,
         "mst_score": score.mst_score,
+        "score_is_meaningful": turns_blocked < score.turns_attempted,
         "events": events,
     }
 
@@ -221,16 +231,30 @@ def write_report(
     md_lines = [
         "# MST-RIF Report",
         "",
-        "| task_id | model | turns_attempted | turns_passed |"
+        "| task_id | model | turns_attempted | turns_passed | turns_blocked |"
         " first_regression_turn | mst_score |",
-        "| --- | --- | --- | --- | --- | --- |",
+        "| --- | --- | --- | --- | --- | --- | --- |",
     ]
     for row in combined:
+        # A blocked turn verifies nothing, so a session policy gated shut scores
+        # a perfect MST. The JSON has carried turns_blocked and
+        # score_is_meaningful since that was found; without them here the
+        # Markdown still showed a fully blocked run as a clean 4/4. Rows merged
+        # from an older report may predate both keys, hence the defaults.
+        blocked = row.get("turns_blocked", 0)
+        meaningful = row.get("score_is_meaningful", True)
+        score = row["mst_score"] if meaningful else f"{row['mst_score']} (INVALID)"
         md_lines.append(
             f"| {row['task_id']} | {row['model']} | {row['turns_attempted']} |"
-            f" {row['turns_passed']} | {row['first_regression_turn']} |"
-            f" {row['mst_score']} |"
+            f" {row['turns_passed']} | {blocked} |"
+            f" {row['first_regression_turn']} | {score} |"
         )
+    if any(not row.get("score_is_meaningful", True) for row in combined):
+        md_lines += [
+            "",
+            "> **INVALID**: every turn in that session was blocked by policy, so"
+            " nothing was verified and the score measures nothing.",
+        ]
     md_path = reports_dir / "mst_report.md"
     md_path.write_text("\n".join(md_lines) + "\n", encoding="utf-8")
 
@@ -264,7 +288,19 @@ def main(argv: list[str] | None = None) -> int:
     session_path = write_session(session)
     write_report([session["result"]])
 
-    print(f"mst_score={session['result']['mst_score']} session={session_path}")
+    result = session["result"]
+    print(f"mst_score={result['mst_score']} session={session_path}")
+    if not result["score_is_meaningful"]:
+        # Every turn was gated shut, so nothing was verified and the score
+        # above is an artefact of blocked turns counting as non-regressions.
+        print(
+            f"WARNING: all {result['turns_attempted']} turn(s) were blocked by "
+            "policy; no candidate was verified and mst_score is meaningless. "
+            "The runtime needs a rule allowing action 'code.refine' -- see "
+            "'Required policy' in the eval README.",
+            file=sys.stderr,
+        )
+        return 1
     return 0
 
 

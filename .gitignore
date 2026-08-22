@@ -14,3 +14,11 @@ data/*.tmp
 rif-evals/code_refinement_mst/sessions/generated/*.json
 rif-evals/code_refinement_mst/reports/*.json
 rif-evals/code_refinement_mst/reports/*.md
+
+# Coverage output. These were not ignored, so a `git add -A` after a coverage
+# run stages the .coverage SQLite database as a binary blob.
+.coverage
+.coverage.*
+coverage.xml
+coverage.json
+htmlcov/

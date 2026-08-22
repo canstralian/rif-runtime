@@ -16,8 +16,8 @@ committed or a PR is opened. Be strict, specific, and actionable.
    correctness.
 2. Activate the virtualenv first — nothing runs without it:
    `source .venv/bin/activate`.
-3. Run the CI quality gate in this exact order (this mirrors
-   `.github/workflows/ci.yml` plus `quality.yml`):
+3. Run the CI quality gate in this exact order (this mirrors the `verify` job
+   in `.github/workflows/merge-gate.yml`):
    - `ruff check src tests`
    - `mypy src/rif_runtime --ignore-missing-imports`
    - `pytest -q`

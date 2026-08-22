@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from rif_runtime.execution.exceptions import CapabilityNotFoundError, PolicyViolationError
+from rif_runtime.execution.exceptions import (
+    CapabilityNotFoundError,
+    PolicyViolationError,
+)
 
 from .capability import Capability
 from .models import CapabilityEvaluation, CapabilityRecord, CapabilityStatus
@@ -80,7 +83,8 @@ class CapabilityRegistry:
             CapabilityStatus.available,
         }:
             raise PolicyViolationError(
-                f"Capability admission denied: lifecycle={record.lifecycle.status}: {name}"
+                "Capability admission denied: "
+                f"lifecycle={record.lifecycle.status}: {name}"
             )
         record.lifecycle.status = CapabilityStatus.admitted
         return record

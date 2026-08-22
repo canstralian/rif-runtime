@@ -24,15 +24,29 @@
 # Governance posture: normal | elevated | restricted | locked
 posture = "normal"
 
-# Active environment name (must match an entry in environments.yaml)
-environment = "production"
+# Active environment name. Must match an entry in environments.yaml -- an
+# unknown name now raises at startup rather than being ignored, because the
+# environment carries the egress constraints and quietly serving a different
+# profile than the one configured is a silent downgrade.
+#
+# Was "production", which environments.yaml does not define. That was harmless
+# only while this key was unread; the shipped config now names a real profile.
+environment = "RIF_Runtime"
 
 # Allow outbound network calls to cloud services. Defaults to false (air-gapped).
 cloud_egress = false
 
 [server]
-# FastAPI / Uvicorn bind settings
-host = "0.0.0.0"
+# FastAPI / Uvicorn bind settings.
+#
+# `rif serve` now takes its default host and port from here (both were
+# previously hardcoded in the CLI, so these keys were parsed and ignored).
+# Loopback is the default for that reason: a checked-in 0.0.0.0 would have
+# turned every `rif serve` into a network-facing listener the moment the
+# setting started being read. Deployments that must listen externally set
+# RIF_SERVER_HOST, or pass --host; the container image already passes
+# --host=0.0.0.0 explicitly.
+host = "127.0.0.1"
 port = 8000
 
 # ASGI root_path for reverse-proxy deployments (e.g. "/api/v1")

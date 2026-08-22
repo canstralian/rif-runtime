@@ -10,17 +10,37 @@ services:
     container_name: rif-runtime-server-prod
     restart: always
     environment:
-      RIF_LOG_LEVEL: "INFO"
-      RIF_SERVER_WORKERS: "4"
-      RIF_SECURITY_SANDBOX_MODE: "strict"
-      RIF_POLICY_AUTO_RELOAD: "true"
+      # Only settings the runtime actually reads. This block previously set
+      # RIF_LOG_LEVEL, RIF_SERVER_WORKERS, RIF_SECURITY_SANDBOX_MODE and
+      # RIF_POLICY_AUTO_RELOAD, none of which anything in src/ reads --
+      # "sandbox mode: strict" in particular read as a hardening control while
+      # doing nothing at all. See .env.example for the full supported set.
+      RIF_POSTURE: "normal"
+      RIF_DATA_DIR: "/app/data"
+      RIF_CONFIG_DIR: "/app/config"
+      # Fail-closed control-plane auth: supply real keys via your secret store.
+      RIF_CONTROL_PLANE_API_KEYS: "${RIF_CONTROL_PLANE_API_KEYS:?set a control-plane key}"
+      # Governance-state reads require the same key in production.
+      RIF_REQUIRE_READ_AUTH: "true"
+      # HMAC key for Metasploit capability tokens. Required, not defaulted:
+      # ${VAR:-} passes an empty string when unset, and MetasploitGovernor
+      # treats empty as absent and generates a fresh random key per process --
+      # so with `restart: always` every restart silently invalidates every
+      # outstanding token. Failing to start is the honest outcome.
+      RIF_MSF_BROKER_KEY: "${RIF_MSF_BROKER_KEY:?set a stable Metasploit signing key}"
     ports:
       - "8000:8000"
     volumes:
       - rif-data:/app/data
       - rif-config:/app/config
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      # python, not curl: the runtime image is python:slim and has no curl, so
+      # the previous check could only ever fail.
+      test:
+        - "CMD"
+        - "python"
+        - "-c"
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5).status == 200 else 1)"
       interval: 30s
       timeout: 10s
       retries: 3

@@ -4,18 +4,23 @@ The current Typer CLI is implemented in `src/rif_runtime/cli.py`.
 
 ## `rif serve`
 
-Start the FastAPI service with Uvicorn and reload enabled.
+Start the FastAPI service with Uvicorn.
 
 ```bash
 rif serve
 rif serve --host 127.0.0.1 --port 8000
+rif serve --reload          # development only
 ```
 
-For a single foreground process without reload, use Uvicorn directly:
+| Option | Default | Meaning |
+|---|---|---|
+| `--host` | `127.0.0.1` | Interface to bind |
+| `--port` | `8000` | Port to bind |
+| `--reload` | off | Restart on source changes (development only) |
 
-```bash
-python -m uvicorn rif_runtime.api:app --host 127.0.0.1 --port 8000
-```
+Auto-reload is opt-in. It was previously always on, which meant this command —
+the one the README quick start documents — started uvicorn's file-watching
+reloader even when serving for real.
 
 ## `rif check`
 

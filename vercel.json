@@ -3,7 +3,13 @@
   "builds": [
     {
       "src": "api/index.py",
-      "use": "@vercel/python"
+      "use": "@vercel/python",
+      "config": {
+        "includeFiles": [
+          "config/**",
+          "rif.toml"
+        ]
+      }
     }
   ],
   "routes": [
