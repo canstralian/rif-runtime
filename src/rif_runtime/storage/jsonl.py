@@ -180,10 +180,11 @@ class HashChainedJsonlStore(JsonlStore):
         while True:
             start = max(0, size - window)
             handle.seek(start)
-            # Trailing newline stripped first, so the final record is what
-            # follows the last remaining newline rather than the empty string
-            # after it.
-            chunk = handle.read(size - start).rstrip(b"\n")
+            # Trailing whitespace stripped first, so the final record is what
+            # follows the last remaining newline rather than a blank or
+            # whitespace-only trailing line. read_all() likewise ignores such
+            # lines, so writer and reader agree on which row is the tail.
+            chunk = handle.read(size - start).rstrip()
             boundary = chunk.rfind(b"\n")
             if boundary != -1:
                 # A newline inside the slice: everything after it is one whole
