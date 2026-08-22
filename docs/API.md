@@ -24,6 +24,14 @@ The HTTP route definitions in `src/rif_runtime/api.py` are the source of truth. 
 | `POST` | `/v1/mcp/metasploit/evaluate` | Evaluate a Metasploit capability request in dry-run mode | None |
 | `GET` | `/v1/mcp/metasploit/capabilities` | Inspect governed Metasploit capability metadata | None |
 
+## Policy management
+
+| Method | Route | Purpose | Auth |
+|---|---|---|---|
+| `GET` | `/v1/policies` | List policy rules | None |
+| `PUT` | `/v1/policies/{rule_id}` | Create/update a policy rule | `X-API-Key` |
+| `DELETE` | `/v1/policies/{rule_id}` | Delete a policy rule | `X-API-Key` |
+
 ## Mutable control-plane operations
 
 These routes are guarded by `X-API-Key` through `RIF_CONTROL_PLANE_API_KEYS`.
@@ -33,10 +41,13 @@ These routes are guarded by `X-API-Key` through `RIF_CONTROL_PLANE_API_KEYS`.
 | `POST` | `/v1/environment/{name}` | Change the active environment |
 | `POST` | `/v1/posture/{posture}` | Set runtime posture |
 | `POST` | `/v1/posture/reset` | Reset posture |
-| `GET` | `/v1/policies` | List policy rules |
-| `PUT` | `/v1/policies/{rule_id}` | Create/update a policy rule |
-| `DELETE` | `/v1/policies/{rule_id}` | Delete a policy rule |
 | `POST` | `/v1/mcp/metasploit/token` | Mint a governed capability token |
+
+## Execution runs
+
+| Method | Route | Purpose | Auth |
+|---|---|---|---|
+| `POST` | `/v1/runs` | Create a governed execution run | Supabase JWT |
 
 ## Authentication
 
