@@ -147,7 +147,9 @@ def test_execution_state_is_not_used_by_the_runtime():
 
     root = Path(__file__).resolve().parent.parent / "src" / "rif_runtime"
 
-    def imports_execution_state(node: ast.AST, module_name: str) -> bool:
+    def imports_execution_state(
+        node: ast.AST, module_name: str, is_package: bool
+    ) -> bool:
         """Every spelling of the import, absolute and relative.
 
         `ast` puts the leading dots of a relative import in `node.level`, not in
@@ -168,7 +170,13 @@ def test_execution_state_is_not_used_by_the_runtime():
             return False
 
         if node.level:
-            package = module_name.rsplit(".", 1)[0] if "." in module_name else ""
+            # A package's `__init__` is its own package; a module's package is
+            # its parent. Stripping the last component of a package would climb
+            # one level too far and mis-resolve a same-package `from .state`.
+            if is_package:
+                package = module_name
+            else:
+                package = module_name.rsplit(".", 1)[0] if "." in module_name else ""
             # One dot means the importer's own package; each extra dot climbs.
             parts = package.split(".") if package else []
             climb = node.level - 1
@@ -192,9 +200,10 @@ def test_execution_state_is_not_used_by_the_runtime():
         relative = path.relative_to(root).with_suffix("")
         parts = [part for part in relative.parts if part != "__init__"]
         module_name = ".".join(("rif_runtime", *parts))
+        is_package = path.name == "__init__.py"
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
-            if imports_execution_state(node, module_name):
+            if imports_execution_state(node, module_name, is_package):
                 importers.append(str(path.relative_to(root)))
 
     assert not importers, (
