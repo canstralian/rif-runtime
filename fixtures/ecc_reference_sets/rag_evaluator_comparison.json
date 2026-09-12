@@ -1,0 +1,36 @@
+{
+  "area": "rag-evaluator",
+  "version": "2026-09-12",
+  "cases": [
+    {
+      "id": "lock-sync-header-drift",
+      "query": "Why did merge gate fail with LOCK_SYNC?",
+      "expected_top_ranked_evidence": [
+        ".github/workflows/merge-gate.yml",
+        "Makefile",
+        "requirements/runtime.txt",
+        "requirements/dev.txt"
+      ],
+      "expected_summary_must_include": [
+        "header drift",
+        "make lock",
+        "git diff --exit-code -- requirements/"
+      ]
+    },
+    {
+      "id": "required-versus-advisory-gates",
+      "query": "Which merge gate checks are required?",
+      "expected_top_ranked_evidence": [
+        ".github/workflows/merge-gate.yml",
+        "PROJECT_STATE.md"
+      ],
+      "expected_summary_must_include": [
+        "LOCK_SYNC",
+        "VERIFY",
+        "CLEAN_CLONE",
+        "DEP_SECURITY",
+        "typecheck-tests advisory"
+      ]
+    }
+  ]
+}

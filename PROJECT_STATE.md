@@ -56,5 +56,13 @@ Reconciled state as of 2026-09-12 from repository and GitHub workflow evidence.
 
 ## Follow-up
 
+- ECC reference-set readiness evidence added in this PR:
+  - Deep analyzer corpus: `fixtures/ecc_reference_sets/deep_analyzer_corpus.jsonl`
+  - RAG/evaluator comparison: `fixtures/ecc_reference_sets/rag_evaluator_comparison.json`
+  - PR salvage/review corpus: `fixtures/ecc_reference_sets/pr_salvage_review_corpus.json`
+  - Discussion triage corpus: `fixtures/ecc_reference_sets/discussion_triage_corpus.json`
+  - Harness compatibility fixture: `fixtures/ecc_reference_sets/harness_compatibility_audit.json`
+  - CI failure-mode evidence: `docs/ci/lock-sync-failure-mode.md`
+  - Security evidence index: `docs/ci/security-evidence-2026-09-12.md`
 - Revalidate branch `#173` separately before any stabilization claims are advanced.
 - Refresh this file again when stabilization actually lands on `main`.

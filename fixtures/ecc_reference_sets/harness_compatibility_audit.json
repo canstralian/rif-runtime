@@ -1,0 +1,55 @@
+{
+  "area": "harness-compatibility",
+  "version": "2026-09-12",
+  "surfaces": [
+    {
+      "name": "Claude",
+      "required_contracts": [
+        "evidence-first-claims",
+        "merge-gate-required-check-separation"
+      ],
+      "status": "configured"
+    },
+    {
+      "name": "Codex",
+      "required_contracts": [
+        "evidence-first-claims",
+        "merge-gate-required-check-separation"
+      ],
+      "status": "configured"
+    },
+    {
+      "name": "OpenCode",
+      "required_contracts": [
+        "evidence-first-claims"
+      ],
+      "status": "unverified"
+    },
+    {
+      "name": "Zed",
+      "required_contracts": [
+        "evidence-first-claims"
+      ],
+      "status": "unverified"
+    },
+    {
+      "name": "dmux",
+      "required_contracts": [
+        "evidence-first-claims"
+      ],
+      "status": "unverified"
+    },
+    {
+      "name": "agent-surfaces",
+      "required_contracts": [
+        "read-only-reviewers",
+        "no-unauthorized-egress-claims"
+      ],
+      "status": "partial"
+    }
+  ],
+  "notes": [
+    "configured = repository-managed configuration is present.",
+    "unverified = no execution/run evidence attached in this fixture."
+  ]
+}
