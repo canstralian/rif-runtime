@@ -212,21 +212,23 @@ all: docker-down clean install dev docker-up
 
 # Dependency locks (see requirements/README.md)
 PIP_COMPILE_ARGS = --quiet --generate-hashes --strip-extras --allow-unsafe
+PIP_COMPILE_LOCK = CUSTOM_COMPILE_COMMAND="make lock" pip-compile
+PIP_COMPILE_LOCK_UPGRADE = CUSTOM_COMPILE_COMMAND="make lock" pip-compile
 
 # Recompile the locks from pyproject.toml. pip-compile keeps the versions
 # already pinned in the output files, so this is a no-op unless pyproject.toml
 # changed. CI's `lock-sync` job runs the same commands and fails on any diff.
 lock:
-	pip-compile $(PIP_COMPILE_ARGS) \
+	$(PIP_COMPILE_LOCK) $(PIP_COMPILE_ARGS) \
 		--output-file requirements/runtime.txt pyproject.toml
-	pip-compile $(PIP_COMPILE_ARGS) \
+	$(PIP_COMPILE_LOCK) $(PIP_COMPILE_ARGS) \
 		--extra dev --output-file requirements/dev.txt pyproject.toml
 
 # Deliberately pull in newer upstream releases within the declared ranges.
 lock-upgrade:
-	pip-compile $(PIP_COMPILE_ARGS) --upgrade \
+	$(PIP_COMPILE_LOCK_UPGRADE) $(PIP_COMPILE_ARGS) --upgrade \
 		--output-file requirements/runtime.txt pyproject.toml
-	pip-compile $(PIP_COMPILE_ARGS) --upgrade \
+	$(PIP_COMPILE_LOCK_UPGRADE) $(PIP_COMPILE_ARGS) --upgrade \
 		--extra dev --output-file requirements/dev.txt pyproject.toml
 
 # Install exactly what CI installs — including the pip upgrade the CI jobs do,

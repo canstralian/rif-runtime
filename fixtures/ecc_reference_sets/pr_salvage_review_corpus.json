@@ -1,0 +1,31 @@
+{
+  "area": "pr-salvage",
+  "version": "2026-09-12",
+  "cases": [
+    {
+      "id": "stale-pr-lock-header-drift",
+      "signals": {
+        "required_check_failed": "LOCK_SYNC",
+        "failure_class": "deterministic-header-drift",
+        "last_commit_touches": [
+          "Makefile",
+          ".github/workflows/merge-gate.yml",
+          "requirements/runtime.txt",
+          "requirements/dev.txt"
+        ]
+      },
+      "expected_action": "regenerate-locks-with-canonical-command",
+      "expected_merge_state": "hold"
+    },
+    {
+      "id": "reopen-after-fix-verified",
+      "signals": {
+        "required_checks_passed": true,
+        "new_evidence_attached": true,
+        "comments_addressed": true
+      },
+      "expected_action": "resume-review",
+      "expected_merge_state": "ready-for-maintainer-decision"
+    }
+  ]
+}

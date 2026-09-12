@@ -1,0 +1,31 @@
+{
+  "area": "discussion-triage",
+  "version": "2026-09-12",
+  "labels": [
+    "informational",
+    "answered",
+    "no-response-needed"
+  ],
+  "cases": [
+    {
+      "id": "merge-hold-state-request",
+      "input": "Document whether PR #179 and #180 should merge now and why.",
+      "expected_label": "answered",
+      "expected_response_contains": [
+        "hold",
+        "required checks",
+        "LOCK_SYNC"
+      ]
+    },
+    {
+      "id": "tooling-status-note",
+      "input": "Reference set readiness report is neutral and not a blocker by itself.",
+      "expected_label": "informational"
+    },
+    {
+      "id": "praise-only",
+      "input": "Looks good, no additional action required.",
+      "expected_label": "no-response-needed"
+    }
+  ]
+}
