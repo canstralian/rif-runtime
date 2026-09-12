@@ -28,6 +28,7 @@ The purpose is to avoid two individually plausible implementations that disagree
 |---|---|---|
 | `docs/spec-review-identity-spine-migration.md` | Identity hierarchy and run/aggregate semantics | Check document for current approval state |
 | `docs/spec-review-capability-snapshot-authority.md` | Capability observation, replay, MCP authority | Draft / review required before conflicting implementation |
+| `docs/spec-review-execution-authority-boundary.md` | Authorization proof required before mechanical execution | Draft / open review |
 
 The review documents themselves are authoritative for their review status; this index should not be treated as a substitute for reading them.
 
