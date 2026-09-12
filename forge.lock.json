@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "source": "canstralian/forge",
+  "commit": "633297d189ba17ffdb811e15f7fe1badfb1fd39b",
+  "adapter": "cursor",
+  "selection": {
+    "skills": [
+      "forge-code-review",
+      "forge-implementation"
+    ],
+    "agents": [
+      "forge-code-reviewer"
+    ]
+  },
+  "files": {
+    ".cursor/agents/forge-code-reviewer.md": "93bea332c4a0e6ca782d0283f45ca9483a81c7bd671ba1a8b1e0d61717232b10",
+    ".cursor/skills/forge-code-review/SKILL.md": "4c73a8a1af3cc1acd1da633cb0640ea7d60cf6d2b1b88074787dd9724b83c17c",
+    ".cursor/skills/forge-implementation/SKILL.md": "ef8d0324f0daba594c1035a35bf4bf0220f58ebeae3f55988d099474a3385c91"
+  }
+}
